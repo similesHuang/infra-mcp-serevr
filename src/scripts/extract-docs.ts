@@ -12,7 +12,6 @@ import { join } from "node:path";
 import {
   DOC_FILE_NAME,
   EXAMPLE_FILE_NAME,
-  EXTRACT_COMPONENTS_CHANGELOG_PATH,
   EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH,
   EXTRACTED_COMPONENTS_DATA_PATH,
   EXTRACTED_COMPONENTS_LIST_PATH,
@@ -249,61 +248,29 @@ async function processComponent(componentsPath: string, dirName: string) {
 async function extractAllData(antdRepoPath: string) {
   // 确保数据目录存在
   await mkdir(EXTRACTED_DATA_DIR, { recursive: true });
-  /** 待提取数据的组件目录 */
-  const componentsPath = join(antdRepoPath, "components");
+  /** 待提取数据的模版代码目录 */
+  const codeTemplatesPath = join(antdRepoPath, "/docs/CodeTemplates");
   /** 待提取数据的组件库 packageJson */
   const antDPackageJsonPath = join(antdRepoPath, "package.json");
-  /** 待提取数据的组件库 changelog */
-  const antDChangelogPath = join(
-    antdRepoPath,
-    ".dumi",
-    "preset",
-    EXTRACT_COMPONENTS_CHANGELOG_PATH
-  );
 
-  console.log(`🔍 从 ${componentsPath} 抓取文档信息`);
+  console.log(`🔍 从 ${codeTemplatesPath} 抓取文档信息`);
 
-  if (!existsSync(componentsPath)) {
+  if (!existsSync(codeTemplatesPath)) {
     console.error(
-      `❌ 错误: 未找到 ${componentsPath} 目录，请传入正确的 Ant Design 目录。`
+      `❌ 错误: 未找到 ${codeTemplatesPath} 目录，请传入正确的 infra ui 目录。`
     );
     process.exit(1);
   }
 
-  if (!existsSync(antDPackageJsonPath)) {
-    console.error(
-      `❌ 提取 changelog 错误: 未找到 ${antDPackageJsonPath} 文件，请进入正确的 Ant Design 目录并执行 npm run lint:changelog 脚本`
-    );
-  } else {
-    try {
-      await writeJsonFile(
-        EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH,
-        await readFile(antDChangelogPath, "utf-8").then((content) =>
-          JSON.parse(content)
-        )
-      );
-    } catch (error) {
-      console.error(
-        `  ❌ 写入 changelog 错误:`,
-        (error as Error).message,
-        "使用内置的更新日志"
-      );
-    }
-  }
 
   /** 获取所有组件目录 */
-  const componentEntries = await readdir(componentsPath, {
+  const componentEntries = await readdir(codeTemplatesPath, {
     withFileTypes: true,
   });
   /** 有效的组件目录 */
   const componentDirs = componentEntries.filter(
     (entry) =>
-      entry.isDirectory() &&
-      !entry.name.startsWith(".") &&
-      !entry.name.startsWith("_") &&
-      entry.name !== "locale" &&
-      entry.name !== "style" &&
-      entry.name !== "version"
+      !entry.isDirectory()
   );
 
   console.log(`🙈 共找到 ${componentDirs.length} 个潜在组件\n`);

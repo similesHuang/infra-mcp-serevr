@@ -33,8 +33,7 @@ const EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH = join(
   "components-changelog.json"
 );
 
-/** antd组件更新记录文件路径 */
-const EXTRACT_COMPONENTS_CHANGELOG_PATH = "components-changelog-cn.json";
+
 
 /** 默认提取 ant design 的路径  */
 const DEFAULT_ANT_DESIGN_EXTRACT_PATH = "./ant-design";
@@ -54,7 +53,6 @@ export {
   EXTRACTED_COMPONENTS_DATA_PATH,
   EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH,
   DEFAULT_ANT_DESIGN_EXTRACT_PATH,
-  EXTRACT_COMPONENTS_CHANGELOG_PATH,
   DOC_FILE_NAME,
   EXAMPLE_FILE_NAME,
 };
