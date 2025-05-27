@@ -1,27 +1,23 @@
 import { read } from "to-vfile";
 import { matter } from "vfile-matter";
 
-interface AntdMDMatter {
+interface GroupInfo {
   title: string;
-  category: string;
-  group: string;
-  /** 组件名称 */
-  subtitle: string;
-  /** 组件描述 */
-  description: string;
-  /** 可用版本 */
-  tag: string;
-  [key: string]: any;
+  order: number;
+}
+
+interface InfraMatter {
+  group: GroupInfo;
+  title: string;
 }
 
 /** 解析 markdown的 meta 信息 */
-export const parseMDMatter = async (filePath: string): Promise<AntdMDMatter | undefined> => {
+export const parseMDMatter = async (filePath: string): Promise<InfraMatter | undefined> => {
   try {
     const file = await read(filePath);
     matter(file);
-
-    return file.data.matter as AntdMDMatter;
+    return file.data.matter as InfraMatter;
   } catch (error) {
-    return undefined
+    return undefined;
   }
 };

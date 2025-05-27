@@ -1,6 +1,6 @@
-/** 
+/**
  * 将短横线分隔的字符串转换为帕斯卡命名法(PascalCase)
- * 
+ *
  * @example
  * ```ts
  * const result = toPascalCase("ant-design-components");
@@ -14,9 +14,9 @@ export const toPascalCase = (str: string) => {
     .join("");
 };
 
-/** 
+/**
  * 移除 markdown 中的 YAML frontmatter
- * 
+ *
  * @example
  * ```ts
  * const content = `---
@@ -35,7 +35,7 @@ export const removeFrontmatter = (content: string) => {
   return content.replace(/^---\n([\s\S]*?)\n---\n+/, "");
 };
 
-/** 
+/**
  * 从 Markdown 中提取指定部分
  * @param markdown 要提取的 Markdown 内容
  * @param startMatch 要提取的部分的起始标记
@@ -47,7 +47,7 @@ export const extractSection = (markdown: string, startMatch: string, endMatch = 
   const startIndex = markdown.indexOf(startMatch);
 
   if (startIndex !== -1) {
-    let startPos = startIndex + 1
+    let startPos = startIndex + 1;
     let endPos = markdown.length;
 
     // 查找下一个 ## 标题（但不是 ###+ 标题）
@@ -73,9 +73,9 @@ export const extractSection = (markdown: string, startMatch: string, endMatch = 
  */
 export const removeSection = (markdown: string, startMatch: string, endMatch = /\n## [^#]/) => {
   const section = extractSection(markdown, startMatch, endMatch);
-  
+
   if (section) {
     return markdown.replace(section, "");
   }
   return markdown;
-}
+};

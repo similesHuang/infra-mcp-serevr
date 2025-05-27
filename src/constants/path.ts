@@ -1,4 +1,4 @@
-import {join, resolve } from "path";
+import { join, resolve } from "path";
 
 /** 项目根目录 */
 const ROOT_DIR = process.cwd();
@@ -7,10 +7,7 @@ const ROOT_DIR = process.cwd();
 const EXTRACTED_DATA_DIR = resolve(ROOT_DIR, "componentData");
 
 /** 提取的组件列表路径 */
-const EXTRACTED_COMPONENTS_LIST_PATH = join(
-  EXTRACTED_DATA_DIR,
-  "components-index.json"
-);
+const EXTRACTED_COMPONENTS_LIST_PATH = join(EXTRACTED_DATA_DIR, "components-index.json");
 
 /** 提取的结果元信息路径 */
 const EXTRACTED_METADATA_PATH = join(EXTRACTED_DATA_DIR, "metadata.json");
@@ -30,10 +27,8 @@ const README_MATCH_FIELD = /(?<=(Pre-processed version: ))`(.*)`/;
 /** 提取的组件更新日志路径 */
 const EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH = join(
   EXTRACTED_DATA_DIR,
-  "components-changelog.json"
+  "components-changelog.json",
 );
-
-
 
 /** 默认提取 ant design 的路径  */
 const DEFAULT_ANT_DESIGN_EXTRACT_PATH = "./ant-design";

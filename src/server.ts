@@ -39,12 +39,12 @@ export const createServer = () => {
       - 当用户询问"显示XXX组件文档"时，如果上下文已有该组件信息，直接展示而不再调用工具`,
     },
   );
-  
+
   /** 注册工具 */
   // registerTools(server);
 
   /** 注册 prompt */
-  // registerPrompts(server); 
+  // registerPrompts(server);
   return server;
 };
 
@@ -53,7 +53,6 @@ export const createStdioServer = async (mcpServer: McpServer) => {
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
 };
-
 
 // 支持http、sse传输
 let httpServer: Server | null = null;
@@ -67,7 +66,7 @@ const transports: {
   sse: {},
 };
 
-export const createHttpServer =async (port: number, mcpServer: McpServer) => {
+export const createHttpServer = async (port: number, mcpServer: McpServer) => {
   const app = new Koa();
   const router = new Router();
 
@@ -218,7 +217,6 @@ export const createHttpServer =async (port: number, mcpServer: McpServer) => {
 
   return httpServer;
 };
-
 
 async function closeTransports(
   transports: Record<string, SSEServerTransport | StreamableHTTPServerTransport>,

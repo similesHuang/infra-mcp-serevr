@@ -6,31 +6,27 @@ import { resolve } from "path";
 // 注入环境变量
 config();
 
-export const run = async ()=>{
+export const run = async () => {
+  if (process.argv.includes("--extract")) {
+    // 获取antd组件库路径,路径为最后一个参数
+    const antdRepoArg = resolve(process.argv[process.argv.length - 1]);
 
-  if(process.argv.includes('--extract')){
-     // 获取antd组件库路径,路径为最后一个参数
-     const antdRepoArg = resolve(process.argv[process.argv.length-1]);
-    
-     extractAllData(antdRepoArg).catch((error)=>{
-         console.error("提取组件数据失败:",error);
-         process.exit(1);
-     });
+    extractAllData(antdRepoArg).catch((error) => {
+      console.error("提取组件数据失败:", error);
+      process.exit(1);
+    });
     return;
-      
-  }else{
-     const isStdioMode = process.env.NODE_ENV === "cli" || process.argv.includes("--stdio");
-     const server = createServer();
-  
-  if(isStdioMode){
-     createStdioServer(server);
-  }else{
-     console.log("Server is running in HTTP mode");
-     await createHttpServer(Number(process.env.port)||3000,server);
+  } else {
+    const isStdioMode = process.env.NODE_ENV === "cli" || process.argv.includes("--stdio");
+    const server = createServer();
 
+    if (isStdioMode) {
+      createStdioServer(server);
+    } else {
+      console.log("Server is running in HTTP mode");
+      await createHttpServer(Number(process.env.port) || 3000, server);
+    }
   }
-  }
-
 };
 
 if (process.argv[1]) {
@@ -39,4 +35,3 @@ if (process.argv[1]) {
     process.exit(1);
   });
 }
-

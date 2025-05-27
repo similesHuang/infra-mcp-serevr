@@ -1,36 +1,42 @@
 import { readFile } from "node:fs/promises";
-import { EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH, DOC_FILE_NAME, EXAMPLE_FILE_NAME, EXTRACTED_COMPONENTS_DATA_PATH, EXTRACTED_COMPONENTS_LIST_PATH } from "../constants/path.js";
+import {
+  EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH,
+  DOC_FILE_NAME,
+  EXAMPLE_FILE_NAME,
+  EXTRACTED_COMPONENTS_DATA_PATH,
+  EXTRACTED_COMPONENTS_LIST_PATH,
+} from "../constants/path.js";
 import { Cache } from "./cache.js";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 
-import type { ComponentData } from '../scripts/extract-docs.js';
+import type { ComponentData } from "../scripts/extract-docs.js";
 
 interface CacheData {
-  componentsList: ComponentData[]
-  componentsChangelog: Record<string, ComponentChangelogItem[]>
-  componentsDoc: Record<string, string>
-  componentApi: Record<string, string>
-  componentExample: Record<string, string>
+  componentsList: ComponentData[];
+  componentsChangelog: Record<string, ComponentChangelogItem[]>;
+  componentsDoc: Record<string, string>;
+  componentApi: Record<string, string>;
+  componentExample: Record<string, string>;
 }
 
-const componentCache = new Cache<CacheData>()
+const componentCache = new Cache<CacheData>();
 
 /** 加载组件列表 */
 export async function loadComponentsList() {
   try {
-    const cacheComponentList = componentCache.get('componentsList')
+    const cacheComponentList = componentCache.get("componentsList");
     if (cacheComponentList) {
-      return cacheComponentList
+      return cacheComponentList;
     }
-    
+
     const componentList = await readFile(EXTRACTED_COMPONENTS_LIST_PATH, "utf-8");
 
-    const componentListJson = JSON.parse(componentList) as ComponentData[]
-    
-    componentCache.set('componentsList', componentListJson)
-    
-    return componentListJson
+    const componentListJson = JSON.parse(componentList) as ComponentData[];
+
+    componentCache.set("componentsList", componentListJson);
+
+    return componentListJson;
   } catch (error) {
     console.error(`加载组件列表错误: ${(error as Error).message}`);
     return [];
@@ -58,18 +64,18 @@ export const getComponentDocumentation = async (componentName: string) => {
   const docPath = join(EXTRACTED_COMPONENTS_DATA_PATH, component.dirName, DOC_FILE_NAME);
 
   try {
-    const cacheComponentDoc = componentCache.get('componentsDoc') || {}
+    const cacheComponentDoc = componentCache.get("componentsDoc") || {};
     if (cacheComponentDoc?.[component.name]) {
-      return cacheComponentDoc[component.name]
+      return cacheComponentDoc[component.name];
     }
 
     if (existsSync(docPath)) {
       const docResult = await readFile(docPath, "utf-8");
 
-      cacheComponentDoc[component.name] = docResult
-      componentCache.set('componentsDoc', cacheComponentDoc)
+      cacheComponentDoc[component.name] = docResult;
+      componentCache.set("componentsDoc", cacheComponentDoc);
 
-      return docResult
+      return docResult;
     }
 
     return `${component.name} 组件文档不存在`;
@@ -93,18 +99,18 @@ export const listComponentExamples = async (componentName: string) => {
     return `${component.name} 的示例代码不存在`;
   }
   try {
-    const cacheComponentExample = componentCache.get('componentExample') || {}
+    const cacheComponentExample = componentCache.get("componentExample") || {};
     if (cacheComponentExample?.[component.name]) {
-      return cacheComponentExample[component.name]
+      return cacheComponentExample[component.name];
     }
 
     if (existsSync(examplesMdPath)) {
       const exampleResult = await readFile(examplesMdPath, "utf-8");
 
-      cacheComponentExample[component.name] = exampleResult
-      componentCache.set('componentExample', cacheComponentExample)
+      cacheComponentExample[component.name] = exampleResult;
+      componentCache.set("componentExample", cacheComponentExample);
 
-      return exampleResult
+      return exampleResult;
     }
 
     return await readFile(examplesMdPath, "utf-8");
@@ -117,13 +123,15 @@ export const listComponentExamples = async (componentName: string) => {
 interface ComponentChangelogItem {
   version: string;
   changelog: string;
-  refs: string[]
-  releaseDate: string
-  contributors: string[]
+  refs: string[];
+  releaseDate: string;
+  contributors: string[];
 }
 
 /** 获取组件更新记录 */
-export const getComponentsChangelog = async (componentName: string): Promise<Record<string, ComponentChangelogItem[]> | string> => {
+export const getComponentsChangelog = async (
+  componentName: string,
+): Promise<Record<string, ComponentChangelogItem[]> | string> => {
   const component = await findComponentByName(componentName);
 
   if (!component) {
@@ -131,16 +139,15 @@ export const getComponentsChangelog = async (componentName: string): Promise<Rec
   }
 
   try {
-    const cacheComponentChangelog = componentCache.get('componentsChangelog')
+    const cacheComponentChangelog = componentCache.get("componentsChangelog");
     if (cacheComponentChangelog) {
-      return cacheComponentChangelog
+      return cacheComponentChangelog;
     }
     const componentChangelog = await readFile(EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH, "utf-8");
-    const componentChangelogJson = JSON.parse(componentChangelog)
-    
-    componentCache.set('componentsChangelog', componentChangelogJson)
-    return componentChangelogJson
+    const componentChangelogJson = JSON.parse(componentChangelog);
 
+    componentCache.set("componentsChangelog", componentChangelogJson);
+    return componentChangelogJson;
   } catch (error) {
     console.error(`获取组件更新记录错误 ${component.name}: ${(error as Error).message}`);
     return `未找到 ${component.name} 更新日志`;
