@@ -1,8 +1,6 @@
 import { readFile } from "node:fs/promises";
 import {
-  EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH,
   DOC_FILE_NAME,
-  EXAMPLE_FILE_NAME,
   EXTRACTED_COMPONENTS_DATA_PATH,
   EXTRACTED_COMPONENTS_LIST_PATH,
 } from "../constants/path.js";
@@ -53,7 +51,7 @@ export async function findComponentByName(componentName: string) {
   );
 }
 
-/** 获取 Ant Design 特定组件文档 */
+/** 获取 infra-ui 特定组件文档 */
 export const getComponentDocumentation = async (componentName: string) => {
   const component = await findComponentByName(componentName);
 
@@ -85,40 +83,6 @@ export const getComponentDocumentation = async (componentName: string) => {
   }
 };
 
-/** 获取 Ant Design 特定组件示例 */
-export const listComponentExamples = async (componentName: string) => {
-  const component = await findComponentByName(componentName);
-
-  if (!component) {
-    return "当前组件不存在";
-  }
-
-  const examplesMdPath = join(EXTRACTED_COMPONENTS_DATA_PATH, component.dirName, EXAMPLE_FILE_NAME);
-
-  if (!existsSync(examplesMdPath)) {
-    return `${component.name} 的示例代码不存在`;
-  }
-  try {
-    const cacheComponentExample = componentCache.get("componentExample") || {};
-    if (cacheComponentExample?.[component.name]) {
-      return cacheComponentExample[component.name];
-    }
-
-    if (existsSync(examplesMdPath)) {
-      const exampleResult = await readFile(examplesMdPath, "utf-8");
-
-      cacheComponentExample[component.name] = exampleResult;
-      componentCache.set("componentExample", cacheComponentExample);
-
-      return exampleResult;
-    }
-
-    return await readFile(examplesMdPath, "utf-8");
-  } catch (error) {
-    console.error(`${component.name} 的示例代码不存在: ${(error as Error).message}`);
-    return `${component.name} 的示例代码不存在`;
-  }
-};
 
 interface ComponentChangelogItem {
   version: string;
@@ -128,28 +92,3 @@ interface ComponentChangelogItem {
   contributors: string[];
 }
 
-/** 获取组件更新记录 */
-export const getComponentsChangelog = async (
-  componentName: string,
-): Promise<Record<string, ComponentChangelogItem[]> | string> => {
-  const component = await findComponentByName(componentName);
-
-  if (!component) {
-    return `${component} 组件不存在`;
-  }
-
-  try {
-    const cacheComponentChangelog = componentCache.get("componentsChangelog");
-    if (cacheComponentChangelog) {
-      return cacheComponentChangelog;
-    }
-    const componentChangelog = await readFile(EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH, "utf-8");
-    const componentChangelogJson = JSON.parse(componentChangelog);
-
-    componentCache.set("componentsChangelog", componentChangelogJson);
-    return componentChangelogJson;
-  } catch (error) {
-    console.error(`获取组件更新记录错误 ${component.name}: ${(error as Error).message}`);
-    return `未找到 ${component.name} 更新日志`;
-  }
-};

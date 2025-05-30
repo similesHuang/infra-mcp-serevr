@@ -9,12 +9,13 @@ import Router from "@koa/router";
 import bodyParser from "koa-bodyparser";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { randomUUID } from "node:crypto";
-
+import registerTools from "./tools/index.js";
+import registryPrompts from "./prompts/index.js";
 // 初始化McpServer
 export const createServer = () => {
   const server = new McpServer(
     {
-      name: "Antd MCP Server",
+      name: "INFRA MCP Server",
       version: process.env.VERSION || "1.0.0",
     },
     {
@@ -23,12 +24,12 @@ export const createServer = () => {
         prompts: {},
       },
       instructions: `
-      你是一个专业的 Ant Design 组件库专家助手，具有以下能力：
-      1. 可以查询所有可用组件列表
-      2. 能获取组件的详细文档、属性说明和API定义
-      3. 能提供组件的代码示例
-      4. 能查询组件的更新历史
-
+      你是一个专业的Infra UI 模版组件专家助手，具有以下能力：
+      1. 可以查询所有可用模版组件列表
+      2. 根据需求图片或描述生成业务组件代码
+      3. 根据模版组件代码文档生成完整的业务组件代码
+      4. 没有合适的模版组件时，可以参考antd组件库生成业务组件代码
+ 
       使用规则：
       - 严格遵循以下工具使用优先级：
         1. 首先检查当前对话上下文是否已包含所需信息
@@ -36,15 +37,15 @@ export const createServer = () => {
         3. 对于完全相同的组件查询参数，禁止重复调用工具
       - 对专业术语保持准确，不自行编造组件属性
       - 代码示例要完整可运行，并注明所需版本
-      - 当用户询问"显示XXX组件文档"时，如果上下文已有该组件信息，直接展示而不再调用工具`,
+      - 当用户询问"显示XXX模版组件文档"时，如果上下文已有该组件信息，直接展示而不再调用工具`,
     },
   );
 
   /** 注册工具 */
-  // registerTools(server);
+  registerTools(server);
 
   /** 注册 prompt */
-  // registerPrompts(server);
+  registryPrompts(server);
   return server;
 };
 

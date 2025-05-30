@@ -60,7 +60,7 @@ export class Cache<CacheData extends Record<string, any>> {
       return undefined;
     }
 
-    return value.value;
+    return value.value as CacheData[CacheKey];
   }
   /**
    * 删除组件信息

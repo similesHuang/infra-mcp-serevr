@@ -17,7 +17,7 @@ export const writeJsonFile = async (filePath: string, data: unknown) => {
  * @param params 提取的信息
  * @returns
  */
-export const writeExtractedInfoToReadme = async ({ antdVersion, extractedAt }: MetaDataResult) => {
+export const writeExtractedInfoToReadme = async ({ infraVersion, extractedAt }: MetaDataResult) => {
   if (!process.env.IS_BUILD) {
     await Promise.all(
       [
@@ -35,7 +35,7 @@ export const writeExtractedInfoToReadme = async ({ antdVersion, extractedAt }: M
           await readFile(path, "utf-8").then((content: string) =>
             content.replace(
               match,
-              `\`Ant Design V${antdVersion} ${new Date(extractedAt).toLocaleDateString("zh-CN")}\``,
+              `\`Infra UI V${infraVersion} ${new Date(extractedAt).toLocaleDateString("zh-CN")}\``,
             ),
           ),
         );

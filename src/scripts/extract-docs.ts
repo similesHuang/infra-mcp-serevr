@@ -11,7 +11,7 @@ import { join, resolve } from "node:path";
 
 import {
   DOC_FILE_NAME,
-  EXAMPLE_FILE_NAME,
+  
   EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH,
   EXTRACTED_COMPONENTS_DATA_PATH,
   EXTRACTED_COMPONENTS_LIST_PATH,
@@ -25,6 +25,8 @@ import {
   toPascalCase,
 } from "../utils/md-extract.js";
 import { writeExtractedInfoToReadme, writeJsonFile } from "../utils/write.js";
+import { fi } from "zod/v4/locales";
+import { file } from "zod/v4";
 
 /**
  * 提取的组件示例信息
@@ -53,6 +55,7 @@ export interface ComponentData {
   /** 组件分类 */
   category?: string;
   description?: string;
+  subDocs?:  Record<string, string>;
 }
 
 /**
@@ -113,15 +116,15 @@ async function processComponent(codeTemplatesPath: string, dirName: string) {
   // 初始化组件数据
   const codeTemplateName = toPascalCase(dirName.slice(0, -3)); // 去掉最后的 .md 后缀
 
-  console.log(`📝 正在处理 ${codeTemplateName}...`);
 
   const templateData: ComponentData = {
     name: codeTemplateName,
-    dirName: dirName,
+    dirName: dirName.slice(0, -3),
     documentation: "",
     category: "",
     name_zh: "",
     description: "",
+    subDocs:{}, // 存放嵌入文档内容
   };
 
   try {
@@ -133,13 +136,21 @@ async function processComponent(codeTemplatesPath: string, dirName: string) {
     const docContent = await readFile(resolve(codeTemplateDocPath), "utf-8");
     const contentWithoutFrontmatter = removeFrontmatter(docContent);
 
-    // 提取描述信息
 
+    // 提取描述信息
     const descriptionSection = extractSection(contentWithoutFrontmatter, "#", /<code/g);
     // 使用正则表达式移除所有 <code> 标签
     const formatDescription = descriptionSection
-      .replace(/^-\s*.*<code.*?<\/code>.*$/gm, "") // 删除以 - 开头且包含 <code> 的整行
-      .replace(/<code.*?<\/code>/gs, "") // 删除其他 <code> 标签
+      .split("\n")
+      .map((line) => {
+        // 如果行以 "- " 开头且包含 <code> 标签，则保留这一行
+        if (line.trim().startsWith("-") && line.includes("<code")) {
+          return line;
+        }
+        // 否则，移除该行中的 <code> 标签
+        return line.replace(/<code.*?<\/code>/g, "");
+      })
+      .join("\n")
       .trim();
 
     // 设置描述，并做进一步清理
@@ -169,7 +180,6 @@ async function processComponent(codeTemplatesPath: string, dirName: string) {
 
     for (const match of codeMatches) {
       const codePath = match[1];
-
       try {
         // 根据相对路径获取示例代码
         let examplePath = codePath;
@@ -192,7 +202,6 @@ async function processComponent(codeTemplatesPath: string, dirName: string) {
           for (const ext of extensions) {
             const pathWithExt = `${examplePath}${ext}`;
             if (existsSync(pathWithExt)) {
-              console.log(`  🔍 找到带扩展名的文件: ${pathWithExt}`);
               code = await readFile(pathWithExt, "utf-8");
               examplePath = pathWithExt; // 更新路径以包含扩展名
               found = true;
@@ -207,6 +216,7 @@ async function processComponent(codeTemplatesPath: string, dirName: string) {
 
         // 确定代码语言类型
         const fileExtension = examplePath.toLowerCase().split(".").pop();
+
         const codeLanguage =
           fileExtension === "jsx"
             ? "jsx"
@@ -221,6 +231,9 @@ async function processComponent(codeTemplatesPath: string, dirName: string) {
         // 替换文档中的代码标签为实际代码
         const replacement = `示例代码\n\n\`\`\`${codeLanguage}\n${code}\n\`\`\``;
         processedContent = processedContent.replace(match[0], replacement);
+   
+        await extractNestedComponentsData(examplePath,templateData.subDocs,10);
+      
       } catch (err) {
         console.warn(`  ⚠️ 处理示例代码失败 ${codePath}:`, err);
       }
@@ -228,6 +241,7 @@ async function processComponent(codeTemplatesPath: string, dirName: string) {
 
     // 保存处理后的文档
     templateData.documentation = processedContent;
+    
 
     return templateData;
   } catch (error) {
@@ -238,6 +252,7 @@ async function processComponent(codeTemplatesPath: string, dirName: string) {
 
 /** 处理所有组件并导出数据的主函数 */
 async function extractAllData(infraRepoPath: string) {
+ 
   // 确保数据目录存在
   await mkdir(EXTRACTED_DATA_DIR, { recursive: true });
   /** 待提取模版代码目录 */
@@ -289,15 +304,17 @@ async function extractAllData(infraRepoPath: string) {
 
   /** 组件列表索引 */
   const componentsIndex: ComponentIndex = Object.values(codeTemplatesDataMap).map(
-    ({ name, dirName, name_zh, category, description }) => ({
+    ({ name, dirName, name_zh, category, description,subDocs }) => ({
       name,
       dirName,
       name_zh,
       category,
       description,
+      subDocs: Object.keys(subDocs).length > 0 ? Object.keys(subDocs) : undefined,
     }),
   );
-
+  
+  // 将组件数据写入索引文件
   await writeJsonFile(EXTRACTED_COMPONENTS_LIST_PATH, componentsIndex);
 
   await writeJsonFile(EXTRACTED_METADATA_PATH, metaDataResult);
@@ -306,31 +323,139 @@ async function extractAllData(infraRepoPath: string) {
 
   // 创建组件目录
   await mkdir(EXTRACTED_COMPONENTS_DATA_PATH, { recursive: true });
-
+   
   // 将组件数据写入对应目录
-  for (const componentData of Object.values(componentDataMap)) {
+  for (const componentData of Object.values(codeTemplatesDataMap)) {
     /** 组件内容目录 */
     const componentDir = join(EXTRACTED_COMPONENTS_DATA_PATH, componentData.dirName);
     await mkdir(componentDir, { recursive: true });
 
     // 写入文档
     await writeFile(join(componentDir, DOC_FILE_NAME), componentData.documentation);
-
-    // 写入示例
-    // 创建带有示例描述的markdown文件
-    let examplesMarkdown = `## ${componentData.name} 组件示例\n`;
-
-    componentData.exampleInfoList?.forEach((example) => {
-      examplesMarkdown += `### ${example.title}${example.description}
-\`\`\`tsx
-${example.code}\`\`\`
-`;
-    });
-
-    await writeFile(join(componentDir, EXAMPLE_FILE_NAME), examplesMarkdown);
+  
   }
 
   console.log(`🎉 文档提取完成！数据已保存到 ${EXTRACTED_DATA_DIR}`);
+}
+
+
+/**
+ * 提取嵌套组件数据
+ * @param rootContentPath 模版存放目录
+ * @param filePath 文件路径
+ * @param maxCount 最大递归次数
+ */
+async function extractNestedComponentsData(filePath: string, subDocs: Record<string, string> = {},maxCount = 10) {
+  if (maxCount <= 0) {
+    console.warn(`⚠️ 达到最大递归次数，停止处理: ${filePath}`);
+    return;
+  }
+
+  try {
+    
+    // 读取文件内容
+    const fileContent = await readFile(filePath, "utf-8");
+    
+    // 使用正则表达式匹配所有 import 语句
+    const importRegex = /import\s+(?:(?:{[\s\w,]*}|\*\s+as\s+\w+|\w+)\s+from\s+)?['"]([^'"]+)['"]/g;
+    const importMatches = [...fileContent.matchAll(importRegex)];
+    
+    // 处理每个 import 匹配
+    for (const match of importMatches) {
+      const importPath = match[1];
+      // 只处理相对路径的导入
+      if (importPath.startsWith('.')) {
+        // 先获取当前文件所在目录
+        const currentDir = resolve(filePath, '..');
+        let fullPath = resolve(currentDir, importPath);
+        
+        // 检查文件是否存在，如果不存在尝试添加常见扩展名
+        if (!existsSync(fullPath)) {
+          const extensions = ['.tsx', '.jsx', '.ts', '.js', '.less', '.css', '.scss'];
+          let foundExtension = false;
+          
+          for (const ext of extensions) {
+            if (existsSync(`${fullPath}${ext}`)) {
+              fullPath = `${fullPath}${ext}`;
+              foundExtension = true;
+              break;
+            }
+          }
+          
+          // 尝试查找 index 文件
+          if (!foundExtension && existsSync(`${fullPath}/index.tsx`)) {
+            fullPath = `${fullPath}/index.tsx`;
+            foundExtension = true;
+          } else if (!foundExtension && existsSync(`${fullPath}/index.jsx`)) {
+            fullPath = `${fullPath}/index.jsx`;
+            foundExtension = true;
+          } else if (!foundExtension && existsSync(`${fullPath}/index.js`)) {
+            fullPath = `${fullPath}/index.js`;
+            foundExtension = true;
+          } else if (!foundExtension && existsSync(`${fullPath}/index.ts`)) {
+            fullPath = `${fullPath}/index.ts`;
+            foundExtension = true;
+          }
+          
+          if (!foundExtension) {
+            console.warn(`  ⚠️ 无法找到导入文件: ${importPath}`);
+            continue;
+          }
+        }
+       
+        // 读取导入的文件内容
+        let importedContent = await readFile(fullPath, "utf-8");
+       
+        // 获取文件类型
+        const fileExtension = fullPath.toLowerCase().split('.').pop() || '';
+        
+        // 获取导入文件的基本名称，移除路径和扩展名
+        let baseName = fullPath.split('/').pop()?.replace(/\.\w+$/, '') || 'imported';
+
+        //如果是 index 文件，向前取一位作为名称，并加上文件类型后缀
+        if (baseName === 'index') {
+          const pathParts = fullPath.split('/');
+          if (pathParts.length >= 2) {
+            // 取倒数第二个路径段作为基础名称，并加上文件扩展名
+            const dirName = pathParts[pathParts.length - 2];
+            baseName = `${dirName}-${fileExtension}`;
+          }
+        } else {
+          // 对于非 index 文件，也可以考虑加上扩展名以避免潜在冲突
+          baseName = `${baseName}-${fileExtension}`;
+        }
+
+        console.log('filepath', filePath);
+        console.log('fullPath', fullPath);
+        console.log('baseName', baseName);
+        console.log('\n')
+         // 检查是否已经处理过这个文件（避免重复处理）
+        if (subDocs[baseName]) {
+          console.log(`  ⚠️ 文件 ${baseName} 已存在，跳过处理`);
+          continue;
+        };
+        
+  
+        // 准备 Markdown 内容
+        let mdContent = `//${baseName}\n\n`;
+        
+        // 根据文件类型添加适当的代码块
+        if (['tsx', 'jsx', 'ts', 'js'].includes(fileExtension)) {
+          mdContent += `源文件: \`${importPath}\`\n\n\`\`\`${fileExtension}\n${importedContent}\n\`\`\`\n`;
+        } else if (['less', 'css', 'scss'].includes(fileExtension)) {
+          mdContent += `样式文件: \`${importPath}\`\n\n\`\`\`${fileExtension}\n${importedContent}\n\`\`\`\n`;
+        } else {
+          mdContent += `未知类型文件: \`${importPath}\`\n\n\`\`\`\n${importedContent}\n\`\`\`\n`;
+        }
+        
+        subDocs[baseName] = mdContent;
+       
+        await extractNestedComponentsData(fullPath, subDocs,maxCount - 1);
+      }
+    }
+  } catch (error) {
+    console.error(`❌ 读取或处理文件失败: ${filePath}`, error);
+  }
 }
 
 export default extractAllData;

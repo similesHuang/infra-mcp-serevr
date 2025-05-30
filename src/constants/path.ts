@@ -31,10 +31,10 @@ const EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH = join(
 );
 
 /** 默认提取 ant design 的路径  */
-const DEFAULT_ANT_DESIGN_EXTRACT_PATH = "./ant-design";
+const DEFAULT_ANT_DESIGN_EXTRACT_PATH = "./infra-ui";
 
-const DOC_FILE_NAME = "docs.md";
-const EXAMPLE_FILE_NAME = "examples.md";
+const DOC_FILE_NAME = "templateCode.md";
+
 
 export {
   ROOT_DIR,
@@ -49,5 +49,4 @@ export {
   EXTRACTED_COMPONENTS_DATA_CHANGELOG_PATH,
   DEFAULT_ANT_DESIGN_EXTRACT_PATH,
   DOC_FILE_NAME,
-  EXAMPLE_FILE_NAME,
 };
