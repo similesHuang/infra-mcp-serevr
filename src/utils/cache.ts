@@ -47,7 +47,7 @@ export class Cache<CacheData extends Record<string, any>> {
   }
 
   /**
-   * 获取组件信息
+   * 获取模板信息
    * @param key 组件key
    * @returns 组件信息
    */

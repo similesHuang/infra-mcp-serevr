@@ -47,7 +47,7 @@ export const extractSection = (markdown: string, startMatch: string, endMatch = 
   const startIndex = markdown.indexOf(startMatch);
 
   if (startIndex !== -1) {
-    let startPos = startIndex + 1;
+    const startPos = startIndex + 1;
     let endPos = markdown.length;
 
     // 查找下一个 ## 标题（但不是 ###+ 标题）

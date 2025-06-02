@@ -35,7 +35,6 @@ const DEFAULT_ANT_DESIGN_EXTRACT_PATH = "./infra-ui";
 
 const DOC_FILE_NAME = "templateCode.md";
 
-
 export {
   ROOT_DIR,
   README_PATH,

@@ -1,11 +1,9 @@
-import type{ McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import listComponents from "./list-templates.js";
-
+import listTemplates from "./list-templates.js";
+import getTemplateExample from "./get-template.js";
 export default function registryTools(server: McpServer) {
-  [listComponents].forEach(
-    (registryFn) => {
-      registryFn(server);
-    },
-  );
+  [listTemplates,getTemplateExample].forEach((registryFn) => {
+    registryFn(server);
+  });
 }

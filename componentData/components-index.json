@@ -1,1 +1,1 @@
-[{"name":"Tree","dirName":"tree","name_zh":"左树右表页","category":"页面模板","description":"# 左树右表页\n- 支持搜索过滤\n- 支持自定义ICON\n- 路由记忆当前选中节点","subDocs":["LeftTree-jsx","Detail-jsx","tree-less"]}]
+[{"name":"Tree","dirName":"tree","name_zh":"左树右表页","category":"页面模板","description":"# 左树右表页\n- 支持搜索过滤\n- 支持自定义ICON\n- 路由记忆当前选中节点","subDocsName":["LeftTree-jsx","Detail-jsx","tree-less","mock-js"]}]
