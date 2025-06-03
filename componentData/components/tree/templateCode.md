@@ -13,7 +13,7 @@ import { Empty, Spin } from 'antd';
 import LeftTree from './components/LeftTree';
 import DetailView from '../detail/Detail';
 import qs from 'query-string';
-import './index.less';
+import './index.less'
 import { findTreeData, findTreeDataConcat } from '@bilibili/infra-utils';
 export default function TreeDetail(props) {
   // Tips: umi/v2 请用 props
